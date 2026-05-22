@@ -1,4 +1,4 @@
-import { Heart, Menu, Search, User, UtensilsCrossed, X } from 'lucide-react'
+import { Heart, Menu, Search, User, UtensilsCrossed, X, Store } from 'lucide-react'
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import {Button} from '@/components/ui/button'
@@ -31,6 +31,10 @@ export default function Navbar() {
               <Link to="/profile" className="flex items-center text-gray-700 hover:text-green-600">
                 <User className="h-4 w-4 mr-1" /> Profile
               </Link>
+              <Link to="/recommendations" className="flex items-center text-gray-700 hover:text-green-600">
+                <Store className="h-4 w-4 mr-1" /> Order Food
+              </Link>
+              
               <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white">
                 <Search className="h-4 w-4 mr-1" /> Search
               </Button>
@@ -60,6 +64,7 @@ export default function Navbar() {
               <Link to="/profile" className=" flex items-center text-gray-700 hover:text-green-600">
                 <User className="h-4 w-4 mr-1" /> Profile
               </Link>
+              <Link to="/recommendations" className="block text-gray-700 hover:text-green-600">Order Food</Link>
               <Button className="w-full bg-green-600 hover:bg-green-700 text-white">
                 <Search className="h-4 w-4 mr-1" /> Search
               </Button>
