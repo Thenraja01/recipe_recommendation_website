@@ -1,121 +1,20 @@
-const { generateRecipe, getConfigError, getProvider } = require('../services/llm.service');
-const { 
-    generateRecipe, 
-    getConfigError, 
-    getProvider 
-} = require('../services/llm.service');
+const llmService = require('../services/llm.service');
 
-const prisma = require('../config/prisma');
+exports.generateRecipe = async (req, res) => {
+    const query = req.body?.query || req.body?.prompt || req.body?.dish;
 
-
-// AI recipe chat / generate recipe
-
-exports.chat = async (req, res) => {
+    if (!query || typeof query !== 'string' || !query.trim()) {
+        return res.status(400).json({
+            error: 'Recipe prompt is required'
+        });
+    }
 
     try {
-
-        const {
-            message,
-            dishName
-        } = req.body;
-
-
-        const query =
-            (dishName || message || '').trim();
-
-
-
-        if (!query) {
-
-            return res.status(400).json({
-                message:"Please provide message"
-            });
-
-        }
-
-
-
-        const configError =
-            getConfigError();
-
-
-        if(configError){
-
-            return res.status(503).json({
-                message:configError
-            });
-
-        }
-
-
-
-
-        const result =
-            await generateRecipe(query);
-
-
-
-        // Save chat history if user logged in
-
-        if(req.user?.id){
-
-
-            await prisma.chatHistory.create({
-
-                data:{
-
-
-                    userId:req.user.id,
-
-
-                    message:query,
-
-
-                    response:
-                    JSON.stringify(result.recipe)
-
-
-                }
-
-
-            });
-
-
-        }
-
-
-
-
-        res.json({
-
-            recipe:result.recipe,
-
-            provider:result.provider,
-
-            model:result.model
-
+        const result = await llmService.generateRecipe(query.trim());
+        return res.json(result);
+    } catch (err) {
+        return res.status(err.status || 500).json({
+            error: err.message
         });
-
-
     }
-    catch(err){
-
-
-        console.error(
-            "Chat error:",
-            err
-        );
-
-
-        res.status(500).json({
-
-            message:"Chat failed",
-
-            error:err.message
-
-        });
-
-
-    }
-
 };

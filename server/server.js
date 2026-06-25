@@ -26,7 +26,7 @@ const databasestarted=async ()=>{
     } catch (error) {
         console.error(
             "Database connection failed:",
-            err
+            error
         );
         process.exit(1);
     }
