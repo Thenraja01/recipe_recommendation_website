@@ -1,32 +1,37 @@
 const express = require('express');
-const mongoose = require('mongoose');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 require('dotenv').config();
 
+const prisma = require('./config/prisma');
 const app = express();
 
 // Middleware
 app.use(express.json());
 app.use(cors({
-    origin: 'http://localhost:5173', // Vite default port
+    origin: process.env.FRONTEND_ORIGIN, // Vite default port
     credentials: true
 }));
 app.use(cookieParser());
 
 // Database connection
 const PORT = process.env.PORT || 5000;
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/recipe_db';
 
-const seedRestaurants = require('./seed/restaurants.seed');
-
-mongoose.connect(MONGO_URI)
-    .then(async () => {
-        console.log('MongoDB Connected');
-        await seedRestaurants();
-    })
-    .catch(err => console.error('MongoDB connection error:', err));
-
+const databasestarted=async ()=>{
+    try {
+         await prisma.$connect();
+        console.log(
+            "PostgreSQL connected through Prisma"
+        );    
+    } catch (error) {
+        console.error(
+            "Database connection failed:",
+            err
+        );
+        process.exit(1);
+    }
+}
+databasestarted()
 // Basic route
 app.get('/', (req, res) => {
     res.send('Recipe Recommendation API is running...');

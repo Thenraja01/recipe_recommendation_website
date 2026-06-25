@@ -1,29 +1,121 @@
 const { generateRecipe, getConfigError, getProvider } = require('../services/llm.service');
+const { 
+    generateRecipe, 
+    getConfigError, 
+    getProvider 
+} = require('../services/llm.service');
 
-exports.generateRecipe = async (req, res) => {
+const prisma = require('../config/prisma');
+
+
+// AI recipe chat / generate recipe
+
+exports.chat = async (req, res) => {
+
     try {
-        const { prompt, dishName } = req.body;
-        const query = (dishName || prompt || '').trim();
+
+        const {
+            message,
+            dishName
+        } = req.body;
+
+
+        const query =
+            (dishName || message || '').trim();
+
+
 
         if (!query) {
-            return res.status(400).json({ message: 'Provide dishName or prompt' });
+
+            return res.status(400).json({
+                message:"Please provide message"
+            });
+
         }
 
-        const configError = getConfigError();
-        if (configError) {
-            return res.status(503).json({ message: configError });
+
+
+        const configError =
+            getConfigError();
+
+
+        if(configError){
+
+            return res.status(503).json({
+                message:configError
+            });
+
         }
 
-        const { recipe, provider, model } = await generateRecipe(query);
 
-        res.status(200).json({ recipe, query, provider, model });
-    } catch (err) {
-        console.error('Recipe generation error:', err);
-        const status = typeof err.status === 'number' ? err.status : 500;
-        res.status(status).json({
-            message: err.message || 'Failed to generate recipe',
-            provider: getProvider(),
-            error: process.env.NODE_ENV === 'development' ? err.message : undefined
+
+
+        const result =
+            await generateRecipe(query);
+
+
+
+        // Save chat history if user logged in
+
+        if(req.user?.id){
+
+
+            await prisma.chatHistory.create({
+
+                data:{
+
+
+                    userId:req.user.id,
+
+
+                    message:query,
+
+
+                    response:
+                    JSON.stringify(result.recipe)
+
+
+                }
+
+
+            });
+
+
+        }
+
+
+
+
+        res.json({
+
+            recipe:result.recipe,
+
+            provider:result.provider,
+
+            model:result.model
+
         });
+
+
     }
+    catch(err){
+
+
+        console.error(
+            "Chat error:",
+            err
+        );
+
+
+        res.status(500).json({
+
+            message:"Chat failed",
+
+            error:err.message
+
+        });
+
+
+    }
+
 };

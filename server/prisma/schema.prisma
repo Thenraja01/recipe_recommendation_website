@@ -1,0 +1,204 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum DietaryType {
+  ANY
+  VEG
+  VEGAN
+  NON_VEG
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+model User {
+  id       String @id @default(cuid())
+  username String @unique
+  email    String @unique
+  password String
+
+  avatar String?
+
+  role UserRole @default(USER)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  preferences UserPreference?
+
+  recipes Recipe[]
+
+  favorites     Favorite[]
+  chatHistories ChatHistory[]
+
+  @@index([email])
+  @@index([username])
+}
+
+model UserPreference {
+  id     String @id @default(cuid())
+  userId String @unique
+
+  dietary            DietaryType @default(ANY)
+  maxDeliveryMinutes Int         @default(45)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  cuisines PreferredCuisine[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PreferredCuisine {
+  id           String @id @default(cuid())
+  preferenceId String
+  cuisine      String
+
+  preference UserPreference @relation(fields: [preferenceId], references: [id], onDelete: Cascade)
+
+  @@unique([preferenceId, cuisine])
+}
+
+model Recipe {
+  id String @id @default(cuid())
+
+  title        String
+  instructions String
+
+  image String?
+
+  prepTime Int
+  servings Int @default(1)
+
+  difficulty Difficulty @default(EASY)
+
+  creatorId String
+  creator   User   @relation(fields: [creatorId], references: [id])
+
+  ingredients RecipeIngredient[]
+
+  favorites Favorite[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([title])
+  @@index([creatorId])
+  @@index([difficulty])
+}
+
+model RecipeIngredient {
+  id String @id @default(cuid())
+
+  recipeId String
+  name     String
+
+  recipe Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  @@index([recipeId])
+}
+
+model Favorite {
+  userId   String
+  recipeId String
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recipe Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@id([userId, recipeId])
+}
+
+model Restaurant {
+  id String @id @default(cuid())
+
+  name    String
+  tagline String?
+
+  cuisine String
+
+  rating Float @default(4.0)
+
+  deliveryTime Int   @default(30)
+  deliveryFee  Float @default(2.99)
+  minOrder     Float @default(10)
+
+  offer String?
+
+  image String?
+
+  location String?
+
+  popular Boolean @default(false)
+
+  menuItems MenuItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([name])
+  @@index([cuisine])
+  @@index([popular])
+  @@index([rating])
+}
+
+model MenuItem {
+  id String @id @default(cuid())
+
+  restaurantId String
+
+  title       String
+  description String?
+
+  price Decimal @db.Decimal(10, 2)
+
+  category String @default("main")
+
+  image String?
+
+  prepTime Int @default(20)
+
+  isVeg Boolean @default(true)
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@index([restaurantId])
+  @@index([category])
+  @@index([isVeg])
+}
+
+model ChatHistory {
+  id String @id @default(cuid())
+
+  userId String
+
+  message String
+
+  response String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
