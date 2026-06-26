@@ -48,6 +48,7 @@ model User {
 
   favorites     Favorite[]
   chatHistories ChatHistory[]
+  blogs         Blog[]
 
   @@index([email])
   @@index([username])
@@ -129,62 +130,21 @@ model Favorite {
   @@id([userId, recipeId])
 }
 
-model Restaurant {
-  id String @id @default(cuid())
+model Blog {
+  id            String   @id @default(cuid())
+  title         String
+  content       String   @db.Text
+  image         String?
+  ingredients   String   @db.Text
+  instructions  String   @db.Text
+  recipeHistory String?  @db.Text
+  authorId      String
+  author        User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  name    String
-  tagline String?
-
-  cuisine String
-
-  rating Float @default(4.0)
-
-  deliveryTime Int   @default(30)
-  deliveryFee  Float @default(2.99)
-  minOrder     Float @default(10)
-
-  offer String?
-
-  image String?
-
-  location String?
-
-  popular Boolean @default(false)
-
-  menuItems MenuItem[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([name])
-  @@index([cuisine])
-  @@index([popular])
-  @@index([rating])
-}
-
-model MenuItem {
-  id String @id @default(cuid())
-
-  restaurantId String
-
-  title       String
-  description String?
-
-  price Decimal @db.Decimal(10, 2)
-
-  category String @default("main")
-
-  image String?
-
-  prepTime Int @default(20)
-
-  isVeg Boolean @default(true)
-
-  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-
-  @@index([restaurantId])
-  @@index([category])
-  @@index([isVeg])
+  @@index([title])
+  @@index([authorId])
 }
 
 model ChatHistory {

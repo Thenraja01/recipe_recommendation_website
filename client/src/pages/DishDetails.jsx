@@ -80,7 +80,7 @@ export default function DishDetails() {
 
            <div className="mb-12">
               <h3 className="text-xs font-black uppercase text-slate-400 tracking-[3px] mb-4 flex items-center">
-                 <Flame className="h-4 w-4 mr-2 text-red-500" /> Dish Ingredients
+                 <Flame className="h-4 w-4 mr-2 text-red-500" /> Ingredients
               </h3>
               <div className="flex flex-wrap gap-3">
                  {dish.ingredients.map((ing, i) => (
@@ -89,22 +89,6 @@ export default function DishDetails() {
                     </span>
                  ))}
               </div>
-           </div>
-
-           <div className="bg-red-50 p-6 rounded-2xl mb-12 border border-red-100">
-              <h4 className="text-red-600 font-black uppercase italic tracking-widest text-sm mb-2 flex items-center">
-                <Zap className="h-4 w-4 mr-2 animate-pulse" /> Limited Time Offer
-              </h4>
-              <p className="text-red-900/70 font-bold text-lg">Order now and get 15% discount on your second dish!</p>
-           </div>
-
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Button className="h-16 rounded-2xl bg-slate-900 border-none hover:bg-green-600 text-white font-black uppercase tracking-[3px] shadow-2xl transition-all active:scale-95 text-sm">
-                 <Zap className="h-5 w-5 mr-3 fill-current" /> Place Food Fast
-              </Button>
-              <Button variant="outline" className="h-16 rounded-2xl border-2 border-slate-100 text-slate-800 font-black uppercase tracking-[3px] hover:bg-slate-50 shadow-sm transition-all active:scale-95 text-sm">
-                 <Calendar className="h-5 w-5 mr-3" /> Book Table
-              </Button>
            </div>
         </div>
       </div>

@@ -14,6 +14,10 @@ Given a dish name or food prompt, return ONLY valid JSON with this exact shape:
 }
 Do not wrap the JSON in markdown code fences.`;
 
+const BLOG_SYSTEM_PROMPT = `You are a professional food blogger and culinary expert.
+Generate engaging, well-structured food blog content with accurate culinary information.
+Always provide helpful cooking tips and interesting food history when relevant.`;
+
 function getProvider() {
     return (process.env.LLM_PROVIDER || 'groq').toLowerCase();
 }
@@ -151,4 +155,165 @@ exports.generateRecipe = async (query) => {
     const recipe = extractJson(content);
 
     return { recipe, provider, model };
+};
+
+exports.generateBlog = async (prompt) => {
+    const configError = getConfigError();
+    if (configError) {
+        const err = new Error(configError);
+        err.status = 503;
+        throw err;
+    }
+
+    const { client, model, provider } = createClient();
+
+    const request = {
+        model,
+        messages: [
+            { role: 'system', content: BLOG_SYSTEM_PROMPT },
+            { role: 'user', content: `Write a comprehensive food blog article about: ${prompt}. Include an engaging introduction, detailed content, and a conclusion. Make it informative and appetizing.` }
+        ],
+        temperature: 0.7,
+        max_tokens: 2000
+    };
+
+    const completion = await client.chat.completions.create(request);
+    const content = completion.choices[0]?.message?.content;
+
+    return { content, provider, model };
+};
+
+exports.expandContent = async (text) => {
+    const configError = getConfigError();
+    if (configError) {
+        const err = new Error(configError);
+        err.status = 503;
+        throw err;
+    }
+
+    const { client, model, provider } = createClient();
+
+    const request = {
+        model,
+        messages: [
+            { role: 'system', content: BLOG_SYSTEM_PROMPT },
+            { role: 'user', content: `Expand this short draft into a detailed, engaging blog post with more depth and culinary insights: ${text}` }
+        ],
+        temperature: 0.7,
+        max_tokens: 2000
+    };
+
+    const completion = await client.chat.completions.create(request);
+    const content = completion.choices[0]?.message?.content;
+
+    return { content, provider, model };
+};
+
+exports.summarizeContent = async (text) => {
+    const configError = getConfigError();
+    if (configError) {
+        const err = new Error(configError);
+        err.status = 503;
+        throw err;
+    }
+
+    const { client, model, provider } = createClient();
+
+    const request = {
+        model,
+        messages: [
+            { role: 'system', content: BLOG_SYSTEM_PROMPT },
+            { role: 'user', content: `Summarize this recipe or article into a concise, easy-to-read format highlighting key points: ${text}` }
+        ],
+        temperature: 0.5,
+        max_tokens: 800
+    };
+
+    const completion = await client.chat.completions.create(request);
+    const content = completion.choices[0]?.message?.content;
+
+    return { content, provider, model };
+};
+
+exports.rewriteContent = async (text) => {
+    const configError = getConfigError();
+    if (configError) {
+        const err = new Error(configError);
+        err.status = 503;
+        throw err;
+    }
+
+    const { client, model, provider } = createClient();
+
+    const request = {
+        model,
+        messages: [
+            { role: 'system', content: BLOG_SYSTEM_PROMPT },
+            { role: 'user', content: `Professionally rewrite this content to make it more engaging, polished, and suitable for a food blog: ${text}` }
+        ],
+        temperature: 0.7,
+        max_tokens: 2000
+    };
+
+    const completion = await client.chat.completions.create(request);
+    const content = completion.choices[0]?.message?.content;
+
+    return { content, provider, model };
+};
+
+exports.generateRecipeDetails = async (prompt) => {
+    const configError = getConfigError();
+    if (configError) {
+        const err = new Error(configError);
+        err.status = 503;
+        throw err;
+    }
+
+    const { client, model, provider, useJsonMode } = createClient();
+
+    const request = {
+        model,
+        messages: [
+            { role: 'system', content: SYSTEM_PROMPT },
+            { role: 'user', content: `Generate a detailed recipe with description, ingredients, cooking instructions, and food history for: ${prompt}` }
+        ],
+        temperature: 0.7,
+        max_tokens: 1500
+    };
+
+    if (useJsonMode) {
+        request.response_format = { type: 'json_object' };
+    }
+
+    const completion = await client.chat.completions.create(request);
+    const content = completion.choices[0]?.message?.content;
+    const recipe = extractJson(content);
+
+    return { recipe, provider, model };
+};
+
+exports.answerRecipeQuestion = async (question) => {
+    const configError = getConfigError();
+    if (configError) {
+        const err = new Error(configError);
+        err.status = 503;
+        throw err;
+    }
+
+    const { client, model, provider } = createClient();
+
+    const request = {
+        model,
+        messages: [
+            { role: 'system', content: BLOG_SYSTEM_PROMPT },
+            { role: 'user', content: `Answer this culinary question with expert knowledge and practical advice: ${question}` }
+        ],
+        temperature: 0.7,
+        max_tokens: 1000
+    };
+
+    const completion = await client.chat.completions.create(request);
+    const content = completion.choices[0]?.message?.content;
+
+    return { content, provider, model };
 };

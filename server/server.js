@@ -38,10 +38,10 @@ app.get('/', (req, res) => {
 });
 
 // Import and use routes
-// app.use('/api/auth', require('./routes/auth.routes'));
+app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/recipes', require('./routes/recipe.routes'));
 app.use('/api/chat', require('./routes/chat.routes'));
-app.use('/api/restaurants', require('./routes/restaurant.routes'));
+app.use('/api/blogs', require('./routes/blog.routes'));
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);

@@ -75,7 +75,7 @@ export default function RecipeCard({ recipe }) {
       
       <CardFooter className="p-5 pt-0">
         <Button className="w-full bg-slate-900 border-none hover:bg-green-600 text-white rounded-2xl transition-all shadow-lg font-black uppercase tracking-widest text-xs">
-          Order Fast
+          View Recipe
         </Button>
       </CardFooter>
     </Card>

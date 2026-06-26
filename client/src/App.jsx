@@ -9,8 +9,9 @@ import Favorites from './pages/Favorites'
 import Profile from './pages/Profile'
 import ProtectedRoute from './components/ProtectedRoute'
 import DishDetails from './pages/DishDetails'
-import Recommendations from './pages/Recommendations'
-import RestaurantMenu from './pages/RestaurantMenu'
+import Blogs from './pages/Blogs'
+import BlogDetails from './pages/BlogDetails'
+import WriteBlog from './pages/WriteBlog'
 
 export default function App() {
   return (
@@ -24,8 +25,10 @@ export default function App() {
             <Route path='recipe/:id' element={<DishDetails/>}/>
             <Route path='favorites' element={<Favorites/>}/>
             <Route path='profile' element={<Profile/>}/>
-            <Route path='recommendations' element={<Recommendations/>}/>
-            <Route path='restaurant/:id' element={<RestaurantMenu/>}/>
+            <Route path='blogs' element={<Blogs/>}/>
+            <Route path='blog/:id' element={<BlogDetails/>}/>
+            <Route path='blogs/write' element={<WriteBlog/>}/>
+            <Route path='blogs/edit/:id' element={<WriteBlog/>}/>
         </Route>
 
 
