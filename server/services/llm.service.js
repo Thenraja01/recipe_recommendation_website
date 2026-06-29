@@ -1,4 +1,4 @@
-const OpenAI = require('openai');
+
 
 const SYSTEM_PROMPT = `You are a professional chef assistant for a food delivery app.
 Given a dish name or food prompt, return ONLY valid JSON with this exact shape:

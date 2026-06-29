@@ -1,322 +1,276 @@
-const prisma = require('../config/prisma');
+const prisma = require("../config/prisma");
 
-
+// =======================
 // CREATE RECIPE
+// =======================
+exports.createRecipe = async (req, res) => {
+  try {
+    const {
+      title,
+      ingredients = [],
+      instructions,
+      prepTime,
+      servings,
+      difficulty,
+    } = req.body;
 
-exports.createRecipe = async(req,res)=>{
+    const recipe = await prisma.recipe.create({
+      data: {
+        title,
+        instructions,
+        prepTime,
+        servings,
+        difficulty,
 
-try{
+        creatorId: req.user.id,
 
+        ingredients: {
+          create: Array.isArray(ingredients)
+            ? ingredients.map((name) => ({
+                name,
+              }))
+            : [],
+        },
+      },
 
-const {
-title,
-ingredients,
-instructions,
-prepTime,
-servings,
-difficulty
-}=req.body;
+      include: {
+        creator: {
+          select: {
+            id: true,
+            username: true,
+            avatar: true,
+          },
+        },
+        ingredients: true,
+      },
+    });
 
+    res.status(201).json({
+      success: true,
+      message: "Recipe created successfully",
+      recipe,
+    });
+  } catch (err) {
+    console.error(err);
 
-
-const recipe =
-await prisma.recipe.create({
-
-data:{
-
-
-title,
-
-instructions,
-
-prepTime,
-
-servings,
-
-difficulty,
-
-
-creatorId:req.user.id,
-
-
-ingredients:{
-
-create:
-ingredients.map(item=>({
-
-name:item
-
-}))
-
-}
-
-
-},
-
-
-include:{
-ingredients:true
-}
-
-});
-
-
-
-res.status(201).json({
-
-message:"Recipe created",
-
-recipe
-
-});
-
-
-}
-catch(err){
-
-res.status(500).json({
-error:err.message
-});
-
-}
-
+    res.status(500).json({
+      success: false,
+      error: err.message,
+    });
+  }
 };
 
-
-
-
-
+// =======================
 // GET ALL RECIPES
+// =======================
+exports.getRecipes = async (req, res) => {
+  try {
+    const recipes = await prisma.recipe.findMany({
+      orderBy: {
+        createdAt: "desc",
+      },
 
+      include: {
+        creator: {
+          select: {
+            id: true,
+            username: true,
+            avatar: true,
+          },
+        },
 
-exports.getRecipes = async(req,res)=>{
+        ingredients: true,
+      },
+    });
 
+    res.json({
+      success: true,
+      recipes,
+    });
+  } catch (err) {
+    console.error(err);
 
-try{
-
-
-const recipes =
-await prisma.recipe.findMany({
-
-include:{
-
-
-creator:{
-select:{
-id:true,
-username:true,
-avatar:true
-}
-},
-
-
-ingredients:true
-
-
-}
-
-
-});
-
-
-
-res.json({
-recipes
-});
-
-
-}
-catch(err){
-
-res.status(500).json({
-error:err.message
-});
-
-}
-
-
+    res.status(500).json({
+      success: false,
+      error: err.message,
+    });
+  }
 };
 
+// =======================
+// GET SINGLE RECIPE
+// =======================
+exports.getRecipeById = async (req, res) => {
+  try {
+    const recipe = await prisma.recipe.findUnique({
+      where: {
+        id: Number(req.params.id),
+      },
 
+      include: {
+        creator: {
+          select: {
+            id: true,
+            username: true,
+            avatar: true,
+          },
+        },
 
+        ingredients: true,
+      },
+    });
 
+    if (!recipe) {
+      return res.status(404).json({
+        success: false,
+        message: "Recipe not found",
+      });
+    }
 
-// GET SINGLE
+    res.json({
+      success: true,
+      recipe,
+    });
+  } catch (err) {
+    console.error(err);
 
-
-exports.getRecipeById=async(req,res)=>{
-
-
-try{
-
-
-const recipe =
-await prisma.recipe.findUnique({
-
-where:{
-id:req.params.id
-},
-
-
-include:{
-
-creator:true,
-
-ingredients:true
-
-}
-
-
-});
-
-
-
-if(!recipe){
-
-return res.status(404)
-.json({
-message:"Recipe not found"
-});
-
-}
-
-
-
-res.json({
-recipe
-});
-
-
-}
-catch(err){
-
-res.status(500).json({
-error:err.message
-});
-
-}
-
+    res.status(500).json({
+      success: false,
+      error: err.message,
+    });
+  }
 };
 
+// =======================
+// UPDATE RECIPE
+// =======================
+exports.updateRecipe = async (req, res) => {
+  try {
+    const recipeId = Number(req.params.id);
 
+    const recipe = await prisma.recipe.findUnique({
+      where: {
+        id: recipeId,
+      },
+    });
 
+    if (!recipe) {
+      return res.status(404).json({
+        success: false,
+        message: "Recipe not found",
+      });
+    }
 
+    if (recipe.creatorId !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
 
-// UPDATE
+    const {
+      ingredients,
+      title,
+      instructions,
+      prepTime,
+      servings,
+      difficulty,
+    } = req.body;
 
+    const updated = await prisma.recipe.update({
+      where: {
+        id: recipeId,
+      },
 
-exports.updateRecipe = async(req,res)=>{
+      data: {
+        title,
+        instructions,
+        prepTime,
+        servings,
+        difficulty,
 
+        ...(Array.isArray(ingredients) && {
+          ingredients: {
+            deleteMany: {},
 
-try{
+            create: ingredients.map((name) => ({
+              name,
+            })),
+          },
+        }),
+      },
 
+      include: {
+        creator: {
+          select: {
+            id: true,
+            username: true,
+            avatar: true,
+          },
+        },
 
-const recipe =
-await prisma.recipe.findUnique({
+        ingredients: true,
+      },
+    });
 
-where:{
-id:req.params.id
-}
+    res.json({
+      success: true,
+      message: "Recipe updated successfully",
+      recipe: updated,
+    });
+  } catch (err) {
+    console.error(err);
 
-});
-
-
-
-if(!recipe){
-
-return res.status(404)
-.json({
-message:"Recipe not found"
-});
-
-}
-
-
-
-if(recipe.creatorId !== req.user.id){
-
-return res.status(403)
-.json({
-message:"Unauthorized"
-});
-
-}
-
-
-
-
-const updated =
-await prisma.recipe.update({
-
-where:{
-id:req.params.id
-},
-
-
-data:req.body
-
-});
-
-
-
-res.json({
-
-message:"Updated",
-
-recipe:updated
-
-});
-
-
-}
-catch(err){
-
-res.status(500).json({
-error:err.message
-});
-
-}
-
+    res.status(500).json({
+      success: false,
+      error: err.message,
+    });
+  }
 };
 
+// =======================
+// DELETE RECIPE
+// =======================
+exports.deleteRecipe = async (req, res) => {
+  try {
+    const recipeId = Number(req.params.id);
 
+    const recipe = await prisma.recipe.findUnique({
+      where: {
+        id: recipeId,
+      },
+    });
 
+    if (!recipe) {
+      return res.status(404).json({
+        success: false,
+        message: "Recipe not found",
+      });
+    }
 
+    if (recipe.creatorId !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
 
+    await prisma.recipe.delete({
+      where: {
+        id: recipeId,
+      },
+    });
 
-// DELETE
+    res.json({
+      success: true,
+      message: "Recipe deleted successfully",
+    });
+  } catch (err) {
+    console.error(err);
 
-
-exports.deleteRecipe=async(req,res)=>{
-
-
-try{
-
-
-await prisma.recipe.delete({
-
-where:{
-id:req.params.id
-}
-
-});
-
-
-
-res.json({
-
-message:"Recipe deleted"
-
-});
-
-
-}
-catch(err){
-
-res.status(500).json({
-error:err.message
-});
-
-}
-
+    res.status(500).json({
+      success: false,
+      error: err.message,
+    });
+  }
 };

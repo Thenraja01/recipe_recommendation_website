@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { createBlog, getBlogs, getBlogById, updateBlog, deleteBlog, aiAssist } = require('../controllers/blog.controller');
-const authMiddleware = require('../middlewares/auth.middleware');
+const { createBlog, getBlogs, getBlogById, updateBlog, deleteBlog, aiAssist } = require('../controllers/blog.controller.js');
+const authMiddleware = require('../middlewares/auth.middleware.js');
 
 // Public routes
 router.get('/', getBlogs);

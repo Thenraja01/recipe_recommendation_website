@@ -1,5 +1,5 @@
 const prisma = require('../config/prisma');
-const llmService = require('../services/llm.service');
+const llmService = require('../services/llm.service.js');
 
 // CREATE BLOG
 exports.createBlog = async (req, res) => {

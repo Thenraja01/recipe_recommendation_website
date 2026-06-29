@@ -1,31 +1,32 @@
-import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useState } from 'react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
+import { useNavigate, Link, useLocation } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { UtensilsCrossed } from 'lucide-react'
 
-export default function Login() {
+export default function Signup() {
+  const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const navigate = useNavigate()
   const location = useLocation()
-  const { login } = useAuth()
+  const { register } = useAuth()
 
   const from = location.state?.from?.pathname || '/'
 
-  const handleLogin = async (e) => {
+  const handleSignup = async (e) => {
     e.preventDefault()
     setLoading(true)
     setError('')
     try {
-      await login(email, password)
+      await register(username, email, password)
       navigate(from, { replace: true })
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed. Please check your credentials.')
+      setError(err.response?.data?.message || err.response?.data?.error || 'Registration failed. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -39,10 +40,10 @@ export default function Login() {
             <UtensilsCrossed className="h-8 w-8" />
           </div>
           <h1 className="text-3xl font-black text-slate-900 uppercase italic tracking-tighter">
-            Welcome <span className="text-green-600">Back</span>
+            Join <span className="text-green-600">RecipeRec</span>
           </h1>
           <p className="text-slate-400 font-medium mt-2">
-            Sign in to get AI recipe recommendations and save favorites
+            Create an account to save recipes, write blogs, and chat with our AI chef
           </p>
         </div>
 
@@ -52,7 +53,21 @@ export default function Login() {
           </div>
         )}
 
-        <form onSubmit={handleLogin} className="grid gap-4">
+        <form onSubmit={handleSignup} className="grid gap-4">
+          <div className="form-inputs">
+            <Label htmlFor="username" className="font-black uppercase tracking-widest text-xs text-slate-400">
+              Username
+            </Label>
+            <Input
+              id="username"
+              placeholder="your_username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="h-14 rounded-2xl border-slate-200 focus-visible:ring-green-600 bg-slate-50/50"
+              required
+            />
+          </div>
+
           <div className="form-inputs">
             <Label htmlFor="email" className="font-black uppercase tracking-widest text-xs text-slate-400">
               Email Address
@@ -79,6 +94,7 @@ export default function Login() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="h-14 rounded-2xl border-slate-200 focus-visible:ring-green-600 bg-slate-50/50"
+              minLength={6}
               required
             />
           </div>
@@ -88,14 +104,14 @@ export default function Login() {
             type="submit"
             className="h-14 rounded-2xl bg-slate-900 hover:bg-green-600 text-white font-black uppercase tracking-[2px] shadow-2xl transition-all active:scale-95"
           >
-            {loading ? 'Signing in...' : 'Sign In'}
+            {loading ? 'Creating account...' : 'Create Account'}
           </Button>
 
           <div className="mt-6 text-center">
             <p className="text-sm text-slate-500 font-medium">
-              New here?{' '}
-              <Link to="/auth/signup" className="text-green-600 underline font-black">
-                Create an account
+              Already have an account?{' '}
+              <Link to="/auth" className="text-green-600 underline font-black">
+                Sign in
               </Link>
             </p>
           </div>

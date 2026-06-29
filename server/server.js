@@ -21,7 +21,7 @@ const databasestarted=async ()=>{
     try {
          await prisma.$connect();
         console.log(
-            "PostgreSQL connected through Prisma"
+            "PostgreSQL connected Prisma"
         );    
     } catch (error) {
         console.error(
