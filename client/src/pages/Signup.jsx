@@ -74,7 +74,10 @@ export default function Signup() {
     setError('')
     try {
       const { data } = await api.post('/auth/verify-otp', { email, otp, username, password })
-      // Manually set user since we bypassed the register() context method
+      // Save token and user to local storage for auth context rehydration
+      if (data.token) {
+        localStorage.setItem('token', data.token)
+      }
       localStorage.setItem('user', JSON.stringify(data.user))
       navigate(from, { replace: true })
       window.location.reload()

@@ -15,6 +15,7 @@ export function AuthProvider({ children }) {
       return data.user;
     } catch {
       setUser(null);
+      localStorage.removeItem('token');
       localStorage.removeItem('user');
       return null;
     } finally {
@@ -30,27 +31,36 @@ export function AuthProvider({ children }) {
     refreshUser();
   }, [refreshUser]);
 
+  const storeAuth = (data) => {
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('user', JSON.stringify(data.user));
+    setUser(data.user);
+  };
+
   const login = async (email, password) => {
     const { data } = await api.post('/auth/login', { email, password });
-    setUser(data.user);
-    localStorage.setItem('user', JSON.stringify(data.user));
+    storeAuth(data);
     return data;
   };
 
   const register = async (username, email, password) => {
     const { data } = await api.post('/auth/register', { username, email, password });
-    setUser(data.user);
-    localStorage.setItem('user', JSON.stringify(data.user));
+    storeAuth(data);
     return data;
   };
 
   const logout = async () => {
-    try {
-      await api.post('/auth/logout');
-    } finally {
-      setUser(null);
-      localStorage.removeItem('user');
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        await api.post('/auth/logout');
+      } catch {
+        // Ignore logout API errors, still clear local state
+      }
     }
+    setUser(null);
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
   };
 
   return (
