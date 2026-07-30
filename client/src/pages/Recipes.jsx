@@ -1,37 +1,26 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import RecipeCard from '../components/RecipeCard'
 import api from '../lib/api'
 import { Utensils, Search, Loader2 } from 'lucide-react'
 import { Input } from '../components/ui/input'
 
 export default function Recipes() {
-  const [search, setSearch] = useState('');
-  const [menuItems, setMenuItems] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('')
+  const [recipes, setRecipes] = useState([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    api.get('/restaurants')
+    api.get('/recipes')
       .then(({ data }) => {
-        const flat = (data.restaurants || []).flatMap(r =>
-          (r.menuItems || []).map((item, idx) => ({
-            id: `${r._id}-${idx}`,
-            title: item.title,
-            category: item.category,
-            prepTime: item.prepTime,
-            difficulty: 'Easy',
-            price: item.price,
-            image: item.image
-          }))
-        );
-        setMenuItems(flat);
+        setRecipes(data.recipes || [])
       })
       .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
+      .finally(() => setLoading(false))
+  }, [])
 
-  const filtered = menuItems.filter(item =>
-    item.title.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = recipes.filter(item =>
+    item.title?.toLowerCase().includes(search.toLowerCase())
+  )
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-12 bg-white min-h-screen">
@@ -41,14 +30,14 @@ export default function Recipes() {
             <Utensils className="h-8 w-8 text-green-600" />
           </div>
           <div>
-            <h1 className="text-4xl font-black text-gray-800 uppercase italic">Digital Menu</h1>
-            <p className="text-gray-400 font-medium tracking-wide">All dishes from partner hotels</p>
+            <h1 className="text-4xl font-black text-gray-800 uppercase italic">Recipes</h1>
+            <p className="text-gray-400 font-medium tracking-wide">Discover dishes from our community</p>
           </div>
         </div>
         <div className="relative w-full md:w-[400px]">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 h-5 w-5" />
           <Input
-            placeholder="Search food item..."
+            placeholder="Search recipes..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="h-14 pl-12 rounded-2xl border-gray-100 bg-gray-50 focus-visible:ring-green-600"
@@ -60,11 +49,17 @@ export default function Recipes() {
         <div className="flex justify-center py-20">
           <Loader2 className="h-10 w-10 animate-spin text-green-600" />
         </div>
-      ) : (
+      ) : filtered.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {filtered.map((item) => (
             <RecipeCard key={item.id} recipe={item} />
           ))}
+        </div>
+      ) : (
+        <div className="min-h-[40vh] flex flex-col items-center justify-center text-center p-12 bg-slate-50 rounded-[3rem] border-2 border-dashed border-slate-200">
+          <Utensils className="h-20 w-20 text-slate-200 mb-6" />
+          <h2 className="text-3xl font-black text-slate-400 uppercase italic mb-4">No Recipes Found</h2>
+          <p className="text-slate-400 font-medium max-w-sm">Try adjusting your search or check back later for new recipes!</p>
         </div>
       )}
     </div>

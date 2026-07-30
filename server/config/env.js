@@ -21,6 +21,14 @@ const config = {
     origin: process.env.FRONTEND_ORIGIN || 'http://localhost:5173',
   },
 
+  email: {
+    host: process.env.SMTP_HOST || '',
+    port: parseInt(process.env.SMTP_PORT, 10) || 587,
+    user: process.env.SMTP_USER || '',
+    pass: process.env.SMTP_PASS || '',
+    from: process.env.EMAIL_FROM || 'noreply@reciperec.com',
+  },
+
   llm: {
     provider: (process.env.LLM_PROVIDER || 'groq').toLowerCase(),
     model: process.env.LLM_MODEL || 'llama-3.3-70b-versatile',

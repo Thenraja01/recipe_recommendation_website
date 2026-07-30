@@ -11,9 +11,11 @@ export function AuthProvider({ children }) {
     try {
       const { data } = await api.get('/auth/me');
       setUser(data.user);
+      localStorage.setItem('user', JSON.stringify(data.user));
       return data.user;
     } catch {
       setUser(null);
+      localStorage.removeItem('user');
       return null;
     } finally {
       setLoading(false);
@@ -21,18 +23,24 @@ export function AuthProvider({ children }) {
   }, []);
 
   useEffect(() => {
+    const cached = localStorage.getItem('user');
+    if (cached) {
+      try { setUser(JSON.parse(cached)); } catch {}
+    }
     refreshUser();
   }, [refreshUser]);
 
   const login = async (email, password) => {
     const { data } = await api.post('/auth/login', { email, password });
     setUser(data.user);
+    localStorage.setItem('user', JSON.stringify(data.user));
     return data;
   };
 
   const register = async (username, email, password) => {
     const { data } = await api.post('/auth/register', { username, email, password });
     setUser(data.user);
+    localStorage.setItem('user', JSON.stringify(data.user));
     return data;
   };
 
@@ -41,6 +49,7 @@ export function AuthProvider({ children }) {
       await api.post('/auth/logout');
     } finally {
       setUser(null);
+      localStorage.removeItem('user');
     }
   };
 

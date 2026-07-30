@@ -1,4 +1,4 @@
-import { BookOpen, Heart, LogOut, Menu, Search, User, UtensilsCrossed, X } from 'lucide-react'
+import { BookOpen, Heart, LogOut, Menu, Search, Sparkles, User, UtensilsCrossed, X } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
@@ -43,6 +43,9 @@ export default function Navbar() {
       </Link>
       <Link to="/favorites" className={`flex items-center ${linkClass}`} onClick={closeMenu}>
         <Heart className="h-4 w-4 mr-1" /> Favorites
+      </Link>
+      <Link to="/recommendations" className={`flex items-center ${linkClass}`} onClick={closeMenu}>
+        <Sparkles className="h-4 w-4 mr-1" /> Picks
       </Link>
       <Link to="/search">
         <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white" onClick={closeMenu}>
@@ -102,6 +105,9 @@ export default function Navbar() {
                 </Link>
                 <Link to="/favorites" className={`flex items-center ${linkClass}`} onClick={closeMenu}>
                   <Heart className="h-4 w-4 mr-1" /> Favorites
+                </Link>
+                <Link to="/recommendations" className={`flex items-center ${linkClass}`} onClick={closeMenu}>
+                  <Sparkles className="h-4 w-4 mr-1" /> Picks
                 </Link>
                 <Link to="/search" className={`block ${linkClass}`} onClick={closeMenu}>Search</Link>
                 <Button
