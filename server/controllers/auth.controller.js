@@ -229,3 +229,41 @@ exports.getMe = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+exports.updateProfile = async (req, res) => {
+  try {
+    const { username, email, avatar } = req.body;
+    const userId = req.user.id;
+
+    const updateData = {};
+    if (username) updateData.username = username;
+    if (avatar !== undefined) updateData.avatar = avatar;
+    if (email) {
+      const existingUser = await prisma.user.findUnique({ where: { email } });
+      if (existingUser && existingUser.id !== userId) {
+        return res.status(400).json({ message: 'Email already in use' });
+      }
+      updateData.email = email;
+    }
+
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: updateData,
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        avatar: true,
+        role: true
+      }
+    });
+
+    res.json({
+      message: 'Profile updated successfully',
+      user: publicUser(user)
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+};

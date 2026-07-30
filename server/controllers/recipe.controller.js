@@ -138,3 +138,38 @@ exports.deleteRecipe = async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 };
+
+exports.getRecommendations = async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      include: {
+        preferences: { include: { cuisines: true } }
+      }
+    });
+
+    let where = {};
+    
+    if (user?.preferences?.cuisines?.length > 0) {
+      const cuisineNames = user.preferences.cuisines.map(c => c.cuisine);
+      where = {
+        title: { contains: cuisineNames[0], mode: 'insensitive' }
+      };
+    }
+
+    const recipes = await prisma.recipe.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      take: 8,
+      include: {
+        creator: { select: { id: true, username: true, avatar: true } },
+        ingredients: true,
+      },
+    });
+
+    res.json({ success: true, recipes });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+};

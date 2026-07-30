@@ -18,6 +18,8 @@ import Blogs from './pages/Blogs'
 import BlogDetails from './pages/BlogDetails'
 import WriteBlog from './pages/WriteBlog'
 import Recommendations from './pages/Recommendations'
+import CreateRecipe from './pages/CreateRecipe'
+import EditProfile from './pages/EditProfile'
 import ErrorBoundary from './components/ErrorBoundary'
 
 export default function App() {
@@ -35,9 +37,11 @@ export default function App() {
 
           <Route element={<ProtectedRoute />}>
             <Route path="recipes" element={<Recipes />} />
+            <Route path="recipes/create" element={<CreateRecipe />} />
             <Route path="recipe/:id" element={<DishDetails />} />
             <Route path="favorites" element={<Favorites />} />
             <Route path="profile" element={<Profile />} />
+            <Route path="profile/edit" element={<EditProfile />} />
             <Route path="search" element={<Search />} />
             <Route path="blogs/write" element={<WriteBlog />} />
             <Route path="blogs/edit/:id" element={<WriteBlog />} />

@@ -11,7 +11,7 @@ export default function Recommendations() {
   useEffect(() => {
     const load = async () => {
       try {
-        const { data } = await api.get('/recipes')
+        const { data } = await api.get('/recipes/recommendations/personalized')
         setRecipes(data.recipes || [])
       } catch (err) {
         console.error(err)

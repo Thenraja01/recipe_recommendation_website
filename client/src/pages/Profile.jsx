@@ -80,7 +80,10 @@ export default function Profile() {
             <p className="mt-4 text-gray-600 max-w-xl mx-auto">
               Passionate food lover sharing recipes, cooking tips, and AI-powered culinary experiences.
             </p>
-            <Button className="mt-6 rounded-full bg-green-600 hover:bg-green-700">
+            <Button 
+              onClick={() => navigate('/profile/edit')}
+              className="mt-6 rounded-full bg-green-600 hover:bg-green-700"
+            >
               <Edit className="mr-2 h-4 w-4" />
               Edit Profile
             </Button>
