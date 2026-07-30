@@ -1,13 +1,14 @@
 const prisma = require('../config/prisma');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const config = require('../config/env');
 
 
 const generateToken = (id) => {
     return jwt.sign(
         { id },
-        process.env.JWT_SECRET,
-        { expiresIn: '30d' }
+        config.jwt.secret,
+        { expiresIn: config.jwt.expiresIn }
     );
 };
 
@@ -52,7 +53,7 @@ message:"User already exists"
 
 
 const hashedPassword =
-await bcrypt.hash(password,10);
+await bcrypt.hash(password, config.jwt.saltRounds);
 
 
 
@@ -71,25 +72,16 @@ const token =generateToken(user.id);
 
 
 
-res.cookie(
-'token',
-token,
-{
-httpOnly:true,
-sameSite:'lax',
-maxAge:30*24*60*60*1000
-}
-);
-
-
+res.cookie('token', token, {
+    httpOnly: true,
+    sameSite: 'lax',
+    maxAge: config.jwt.cookieMaxAge
+});
 
 res.status(201).json({
-
-message:"Registered successfully",
-
-token,
-user:publicUser(user)
-
+    message: 'Registered successfully',
+    token,
+    user: publicUser(user)
 });
 
 
@@ -130,20 +122,16 @@ return res.status(401).json({ message:"Invalid email or password" });
 
 const token = generateToken(user.id);
 
-res.cookie(
-'token',
-token,
-{
-httpOnly:true,
-sameSite:'lax',
-maxAge:30*24*60*60*1000
-}
-);
+res.cookie('token', token, {
+    httpOnly: true,
+    sameSite: 'lax',
+    maxAge: config.jwt.cookieMaxAge
+});
 
 res.json({
-message:"Login successful",
-token,
-user:publicUser(user)
+    message: 'Login successful',
+    token,
+    user: publicUser(user)
 });
 }
 catch(err){

@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const config = require('../config/env');
 
 const getTokenFromRequest = (req) => {
     if (req.cookies?.token) {
@@ -22,7 +23,7 @@ const authMiddleware = (req, res, next) => {
         }
 
         // Verify token
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = jwt.verify(token, config.jwt.secret);
         req.user = decoded; // Store Decoded User info in request object
         next();
     } catch (err) {

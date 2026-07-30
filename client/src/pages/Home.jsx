@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import RecipeCard from '../components/RecipeCard'
 import api from '../lib/api'
 import { useAuth } from '@/context/AuthContext'
+import config from '@/config'
 import {
   Search,
   Sparkles,
@@ -33,7 +34,7 @@ function GuestHome({ blogs, loadingBlogs }) {
       <section className="relative min-h-[480px] flex items-center justify-center overflow-hidden bg-gradient-to-br from-slate-800 via-green-800 to-green-600">
         <div className="absolute inset-0 z-0 opacity-20">
           <img
-            src="https://images.unsplash.com/photo-1543353071-873f17a7a088?ixlib=rb-4.0.3"
+            src={config.hero.imageURL}
             alt="background"
             className="w-full h-full object-cover"
           />
@@ -159,7 +160,7 @@ function AuthenticatedHome({ user, blogs, loadingBlogs, recipes, loadingRecipes 
       <section className="relative h-[450px] flex items-center justify-center overflow-hidden bg-gradient-to-br from-green-500 to-green-700">
         <div className="absolute inset-0 z-0 opacity-20">
           <img
-            src="https://images.unsplash.com/photo-1543353071-873f17a7a088?ixlib=rb-4.0.3"
+            src={config.hero.imageURL}
             alt="background"
             className="w-full h-full object-cover"
           />

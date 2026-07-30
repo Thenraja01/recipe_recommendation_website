@@ -1,4 +1,4 @@
-
+const config = require('../config/env');
 
 const SYSTEM_PROMPT = `You are a professional chef assistant for a food delivery app.
 Given a dish name or food prompt, return ONLY valid JSON with this exact shape:
@@ -19,16 +19,16 @@ Generate engaging, well-structured food blog content with accurate culinary info
 Always provide helpful cooking tips and interesting food history when relevant.`;
 
 function getProvider() {
-    return (process.env.LLM_PROVIDER || 'groq').toLowerCase();
+    return config.llm.provider;
 }
 
 function getConfigError() {
     const provider = getProvider();
 
-    if (provider === 'groq' && !process.env.GROQ_API_KEY?.trim()) {
+    if (provider === 'groq' && !config.llm.groq.apiKey?.trim()) {
         return 'Set GROQ_API_KEY in server/.env — free key at https://console.groq.com/keys';
     }
-    if (provider === 'openai' && !process.env.OPENAI_API_KEY?.trim()) {
+    if (provider === 'openai' && !config.llm.openai.apiKey?.trim()) {
         return 'Set OPENAI_API_KEY in server/.env (or use LLM_PROVIDER=groq).';
     }
     if (provider === 'ollama') {
@@ -46,8 +46,8 @@ function createClient() {
     switch (provider) {
         case 'openai':
             return {
-                client: new OpenAI({ apiKey: process.env.OPENAI_API_KEY }),
-                model: process.env.LLM_MODEL || process.env.OPENAI_MODEL || 'gpt-4o-mini',
+                client: new OpenAI({ apiKey: config.llm.openai.apiKey }),
+                model: config.llm.openai.model,
                 provider,
                 useJsonMode: true
             };
@@ -55,10 +55,10 @@ function createClient() {
         case 'groq':
             return {
                 client: new OpenAI({
-                    apiKey: process.env.GROQ_API_KEY,
-                    baseURL: 'https://api.groq.com/openai/v1'
+                    apiKey: config.llm.groq.apiKey,
+                    baseURL: config.llm.groq.baseURL
                 }),
-                model: process.env.LLM_MODEL || 'llama-3.3-70b-versatile',
+                model: config.llm.model,
                 provider,
                 useJsonMode: true
             };
@@ -66,10 +66,10 @@ function createClient() {
         case 'ollama':
             return {
                 client: new OpenAI({
-                    apiKey: process.env.OLLAMA_API_KEY || 'ollama',
-                    baseURL: process.env.OLLAMA_BASE_URL || 'http://localhost:11434/v1'
+                    apiKey: config.llm.ollama.apiKey,
+                    baseURL: config.llm.ollama.baseURL
                 }),
-                model: process.env.LLM_MODEL || process.env.OLLAMA_MODEL || 'llama3.2',
+                model: config.llm.ollama.model,
                 provider: 'ollama',
                 useJsonMode: false
             };

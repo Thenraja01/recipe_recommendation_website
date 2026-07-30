@@ -1,40 +1,47 @@
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
-require('dotenv').config();
+const helmet = require('helmet');
 
+const config = require('./config/env');
 const prisma = require('./config/prisma');
+
 const app = express();
 
-// Middleware
-app.use(express.json());
+// Security headers
+app.use(helmet());
+
+// Body parsing
+app.use(express.json({ limit: '10kb' }));
+
+// CORS
 app.use(cors({
-    origin: process.env.FRONTEND_ORIGIN, // Vite default port
+    origin: config.cors.origin,
     credentials: true
 }));
+
+// Cookie parser
 app.use(cookieParser());
 
 // Database connection
-const PORT = process.env.PORT || 5000;
-
-const databasestarted=async ()=>{
+const connectDatabase = async () => {
     try {
-         await prisma.$connect();
-        console.log(
-            "PostgreSQL connected Prisma"
-        );    
+        await prisma.$connect();
+        console.log('PostgreSQL connected via Prisma');
     } catch (error) {
-        console.error(
-            "Database connection failed:",
-            error
-        );
+        console.error('Database connection failed:', error.message);
         process.exit(1);
     }
-}
-databasestarted()
+};
+connectDatabase();
+
 // Basic route
 app.get('/', (req, res) => {
-    res.send('Recipe Recommendation API is running...');
+    res.json({
+        message: 'Recipe Recommendation API is running...',
+        environment: config.nodeEnv,
+        version: '1.0.0'
+    });
 });
 
 // Import and use routes
@@ -43,6 +50,19 @@ app.use('/api/recipes', require('./routes/recipe.routes'));
 app.use('/api/chat', require('./routes/chat.routes'));
 app.use('/api/blogs', require('./routes/blog.routes'));
 
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+// 404 handler
+app.use((req, res) => {
+    res.status(404).json({ message: 'Route not found' });
+});
+
+// Global error handler
+app.use((err, req, res, next) => {
+    console.error('Unhandled error:', err.message);
+    res.status(err.status || 500).json({
+        message: config.isDev ? err.message : 'Internal server error'
+    });
+});
+
+app.listen(config.port, () => {
+    console.log(`Server running on port ${config.port} [${config.nodeEnv}]`);
 });
