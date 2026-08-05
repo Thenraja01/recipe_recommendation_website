@@ -53,12 +53,12 @@ function GuestHome({ blogs, loadingBlogs }) {
               </Button>
             </Link>
             <Link to="/auth">
-              <Button variant="outline" className="h-12 px-8 rounded-2xl border-white text-white hover:bg-white/10">
+              <Button className="bg-slate-700 h-12 px-8 rounded-2xl border-white text-white hover:bg-white/10">
                 Login
               </Button>
             </Link>
             <Link to="/blogs">
-              <Button variant="outline" className="h-12 px-8 rounded-2xl border-white/60 text-white hover:bg-white/10">
+              <Button className="bg-orange-500 h-12 px-8 rounded-2xl border-white/60 text-white hover:bg-white/10">
                 Browse Blogs
               </Button>
             </Link>
