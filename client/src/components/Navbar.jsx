@@ -1,4 +1,4 @@
-import { BookOpen, Heart, LogOut, Menu, Plus, Search, Sparkles, User, UtensilsCrossed, X } from 'lucide-react'
+import { BookOpen, Heart, LogOut, Menu, Plus, Search, Sparkles, User, UtensilsCrossed, X, Building2 } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
@@ -34,11 +34,16 @@ export default function Navbar() {
   const authLinks = (
     <>
       <Link to="/" className={linkClass} onClick={closeMenu}>Home</Link>
-      <Link to="/recipes" className={linkClass} onClick={closeMenu}>Recipe</Link>
+      <Link to="/recipes" className={linkClass} onClick={closeMenu}>Recipes</Link>
+      <Link to="/recipes/search" className={linkClass} onClick={closeMenu}>Ingredient Search</Link>
       <Link to="/recipes/create">
         <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white" onClick={closeMenu}>
           <Plus className="h-4 w-4 mr-1" /> Create Recipe
         </Button>
+      </Link>
+      <Link to="/restaurants" className={linkClass} onClick={closeMenu}>Restaurants</Link>
+      <Link to="/restaurant-admin" className={`flex items-center ${linkClass}`} onClick={closeMenu}>
+        <Building2 className="h-4 w-4 mr-1" /> Restaurant Admin
       </Link>
       <Link to="/blogs" className={`flex items-center ${linkClass}`} onClick={closeMenu}>
         <BookOpen className="h-4 w-4 mr-1" /> Food Blogs
@@ -103,8 +108,11 @@ export default function Navbar() {
             {isAuthenticated ? (
               <>
                 <Link to="/" className={`block ${linkClass}`} onClick={closeMenu}>Home</Link>
-                <Link to="/recipes" className={`block ${linkClass}`} onClick={closeMenu}>Recipe</Link>
+                <Link to="/recipes" className={`block ${linkClass}`} onClick={closeMenu}>Recipes</Link>
+                <Link to="/recipes/search" className={`block ${linkClass}`} onClick={closeMenu}>Ingredient Search</Link>
                 <Link to="/recipes/create" className={`block ${linkClass}`} onClick={closeMenu}>Create Recipe</Link>
+                <Link to="/restaurants" className={`block ${linkClass}`} onClick={closeMenu}>Restaurants</Link>
+                <Link to="/restaurant-admin" className={`block ${linkClass}`} onClick={closeMenu}>Restaurant Admin</Link>
                 <Link to="/blogs" className={`block ${linkClass}`} onClick={closeMenu}>Food Blogs</Link>
                 <Link to="/profile" className={`flex items-center ${linkClass}`} onClick={closeMenu}>
                   <User className="h-4 w-4 mr-1" /> Profile

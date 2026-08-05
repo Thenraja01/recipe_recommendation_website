@@ -38,7 +38,7 @@ exports.sendOtp = async (req, res) => {
     }
 
     // Invalidate old OTPs
-    await prisma.oTP.updateMany({
+    await prisma.OTP.updateMany({
       where: { email, used: false },
       data: { used: true }
     });
@@ -46,7 +46,7 @@ exports.sendOtp = async (req, res) => {
     const otp = crypto.randomInt(100000, 999999).toString();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 min
 
-    await prisma.oTP.create({
+    await prisma.OTP.create({
       data: { email, otp, expiresAt }
     });
 
@@ -75,7 +75,7 @@ exports.verifyOtp = async (req, res) => {
     }
 
     // Verify OTP
-    const otpRecord = await prisma.oTP.findFirst({
+    const otpRecord = await prisma.OTP.findFirst({
       where: {
         email,
         otp,
@@ -95,7 +95,7 @@ exports.verifyOtp = async (req, res) => {
     }
 
     // Mark OTP as used
-    await prisma.oTP.update({
+    await prisma.OTP.update({
       where: { id: otpRecord.id },
       data: { used: true }
     });
@@ -261,6 +261,47 @@ exports.updateProfile = async (req, res) => {
     res.json({
       message: 'Profile updated successfully',
       user: publicUser(user)
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.updatePreferences = async (req, res) => {
+  try {
+    const { dietary, allergens } = req.body;
+    const userId = req.user.id;
+
+    const updateData = {};
+    if (dietary) updateData.dietary = dietary;
+    if (allergens !== undefined) updateData.allergens = allergens;
+
+    const preference = await prisma.userPreference.upsert({
+      where: { userId },
+      create: {
+        userId,
+        dietary: dietary || 'ANY',
+        allergens: allergens || []
+      },
+      update: updateData,
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            email: true,
+            avatar: true,
+            role: true
+          }
+        },
+        cuisines: true
+      }
+    });
+
+    res.json({
+      message: 'Preferences updated successfully',
+      preference
     });
   } catch (err) {
     console.error(err);

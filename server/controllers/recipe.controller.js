@@ -1,8 +1,12 @@
 const prisma = require("../config/prisma");
+const nutritionService = require('../services/nutrition.service');
 
 exports.createRecipe = async (req, res) => {
   try {
     const { title, ingredients = [], instructions, prepTime, servings, difficulty } = req.body;
+
+    // Get nutrition information
+    const nutritionData = await nutritionService.getNutritionInfo({ ingredients });
 
     const recipe = await prisma.recipe.create({
       data: {
@@ -12,8 +16,25 @@ exports.createRecipe = async (req, res) => {
         servings: parseInt(servings) || 1,
         difficulty,
         creatorId: req.user.id,
+        calories: nutritionData.calories,
+        protein: nutritionData.protein,
+        carbs: nutritionData.carbs,
+        fat: nutritionData.fat,
+        fiber: nutritionData.fiber,
+        sugar: nutritionData.sugar,
+        sodium: nutritionData.sodium,
+        cholesterol: nutritionData.cholesterol,
+        saturatedFat: nutritionData.saturatedFat,
+        transFat: nutritionData.transFat,
+        vitaminA: nutritionData.vitaminA,
+        vitaminC: nutritionData.vitaminC,
+        calcium: nutritionData.calcium,
+        iron: nutritionData.iron,
+        healthLabels: nutritionData.healthLabels,
+        dietLabels: nutritionData.dietLabels,
+        allergens: nutritionData.allergens,
         ingredients: {
-          create: Array.isArray(ingredients) ? ingredients.map((name) => ({ name })) : [],
+          create: Array.isArray(ingredients) ? ingredients.map((ing) => ({ name: typeof ing === 'object' ? ing.name : ing })) : [],
         },
       },
       include: {
@@ -168,6 +189,48 @@ exports.getRecommendations = async (req, res) => {
     });
 
     res.json({ success: true, recipes });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+
+exports.searchByIngredients = async (req, res) => {
+  try {
+    const { ingredients } = req.query;
+    
+    if (!ingredients) {
+      return res.status(400).json({ success: false, message: 'Ingredients query parameter is required' });
+    }
+
+    const ingredientList = ingredients.split(',').map(i => i.trim().toLowerCase());
+    
+    const recipes = await prisma.recipe.findMany({
+      include: {
+        creator: { select: { id: true, username: true, avatar: true } },
+        ingredients: true,
+      },
+    });
+
+    const filtered = recipes.filter(recipe => {
+      const recipeIngredients = recipe.ingredients.map(i => i.name.toLowerCase());
+      const matchCount = ingredientList.filter(ing => 
+        recipeIngredients.some(ri => ri.includes(ing) || ing.includes(ri))
+      ).length;
+      return matchCount > 0;
+    });
+
+    const sorted = filtered.sort((a, b) => {
+      const aMatches = ingredientList.filter(ing => 
+        a.ingredients.map(i => i.name.toLowerCase()).some(ri => ri.includes(ing) || ing.includes(ri))
+      ).length;
+      const bMatches = ingredientList.filter(ing => 
+        b.ingredients.map(i => i.name.toLowerCase()).some(ri => ri.includes(ing) || ing.includes(ri))
+      ).length;
+      return bMatches - aMatches;
+    });
+
+    res.json({ success: true, recipes: sorted });
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, error: err.message });

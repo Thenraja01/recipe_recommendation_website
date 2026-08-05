@@ -20,6 +20,11 @@ import WriteBlog from './pages/WriteBlog'
 import Recommendations from './pages/Recommendations'
 import CreateRecipe from './pages/CreateRecipe'
 import EditProfile from './pages/EditProfile'
+import IngredientSearch from './pages/IngredientSearch'
+import RestaurantAdmin from './pages/RestaurantAdmin'
+import Restaurants from './pages/Restaurants'
+import RestaurantDetail from './pages/RestaurantDetail'
+import OrderPage from './pages/OrderPage'
 import ErrorBoundary from './components/ErrorBoundary'
 
 export default function App() {
@@ -38,10 +43,15 @@ export default function App() {
           <Route element={<ProtectedRoute />}>
             <Route path="recipes" element={<Recipes />} />
             <Route path="recipes/create" element={<CreateRecipe />} />
+            <Route path="recipes/search" element={<IngredientSearch />} />
             <Route path="recipe/:id" element={<DishDetails />} />
             <Route path="favorites" element={<Favorites />} />
             <Route path="profile" element={<Profile />} />
             <Route path="profile/edit" element={<EditProfile />} />
+            <Route path="restaurants" element={<Restaurants />} />
+            <Route path="restaurant/:id" element={<RestaurantDetail />} />
+            <Route path="order" element={<OrderPage />} />
+            <Route path="restaurant-admin" element={<RestaurantAdmin />} />
             <Route path="search" element={<Search />} />
             <Route path="blogs/write" element={<WriteBlog />} />
             <Route path="blogs/edit/:id" element={<WriteBlog />} />

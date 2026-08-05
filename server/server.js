@@ -31,8 +31,11 @@ app.get('/', (req, res) => {
 app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/recipes', require('./routes/recipe.routes'));
 app.use('/api/blogs', require('./routes/blog.routes'));
+app.use('/api/comments', require('./routes/blogComment.routes'));
 app.use('/api/chat', require('./routes/chat.routes'));
 app.use('/api/favorites', require('./routes/favorite.routes'));
+app.use('/api/restaurants', require('./routes/restaurant.routes'));
+app.use('/api/orders', require('./routes/order.routes'));
 
 app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });

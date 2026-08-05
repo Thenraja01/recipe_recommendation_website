@@ -63,6 +63,7 @@ model UserPreference {
 
   dietary            DietaryType @default(ANY)
   maxDeliveryMinutes Int         @default(45)
+  allergens          String[]
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   cuisines PreferredCuisine[]
@@ -90,6 +91,25 @@ model Recipe {
   prepTime     Int
   servings     Int @default(1)
   difficulty   Difficulty @default(EASY)
+
+  // Nutrition fields
+  calories        Int?
+  protein         Int?
+  carbs           Int?
+  fat             Int?
+  fiber           Int?
+  sugar           Int?
+  sodium          Int?
+  cholesterol     Int?
+  saturatedFat    Int?
+  transFat        Int?
+  vitaminA        Int?
+  vitaminC        Int?
+  calcium         Int?
+  iron            Int?
+  healthLabels    String[]
+  dietLabels      String[]
+  allergens       String[]
 
   creatorId String
   creator   User   @relation(fields: [creatorId], references: [id])

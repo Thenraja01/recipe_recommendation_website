@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { Calendar, User, Clock, ArrowLeft, BookOpen, ChefHat, History, Edit, Trash2 } from 'lucide-react'
+import { Calendar, User, Clock, ArrowLeft, BookOpen, ChefHat, History, Edit, Trash2, MessageSquare, Send, Sparkles, Loader2 } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
+import { Input } from '../components/ui/input'
 import api from '../lib/api'
 import { useAuth } from '../context/AuthContext'
 
@@ -10,11 +11,15 @@ export default function BlogDetails() {
   const { id } = useParams()
   const [blog, setBlog] = useState(null)
   const [relatedBlogs, setRelatedBlogs] = useState([])
+  const [comments, setComments] = useState([])
   const [loading, setLoading] = useState(true)
+  const [question, setQuestion] = useState('')
+  const [askingAI, setAskingAI] = useState(false)
   const { user } = useAuth()
 
   useEffect(() => {
     fetchBlog()
+    fetchComments()
   }, [id])
 
   const fetchBlog = async () => {
@@ -27,6 +32,30 @@ export default function BlogDetails() {
       console.error('Error fetching blog:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchComments = async () => {
+    try {
+      const { data } = await api.get(`/comments/blog/${id}`)
+      setComments(data.comments || [])
+    } catch (error) {
+      console.error('Error fetching comments:', error)
+    }
+  }
+
+  const askAI = async () => {
+    if (!question.trim()) return
+    setAskingAI(true)
+    try {
+      const { data } = await api.post('/comments/ask-ai', { blogId: id, question })
+      setComments([data.comment, ...comments])
+      setQuestion('')
+    } catch (error) {
+      console.error('Error asking AI:', error)
+      alert('Failed to get AI response')
+    } finally {
+      setAskingAI(false)
     }
   }
 
@@ -163,8 +192,72 @@ export default function BlogDetails() {
             </Card>
           </div>
 
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 space-y-6">
             <Card className="border-none shadow-xl rounded-3xl bg-white sticky top-24">
+              <CardHeader className="p-6 bg-gradient-to-r from-green-500 to-emerald-600 rounded-t-3xl">
+                <CardTitle className="text-xl font-bold text-white flex items-center gap-2">
+                  <Sparkles className="h-5 w-5" /> AI Chef Assistant
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <p className="text-sm text-gray-600 mb-4">
+                  Ask questions about this recipe, ingredients, or cooking techniques!
+                </p>
+                <div className="space-y-3 mb-4 max-h-60 overflow-y-auto">
+                  {comments.length > 0 ? (
+                    comments.map((comment) => (
+                      <div key={comment.id} className={`p-3 rounded-xl ${comment.isAIAnswer ? 'bg-green-50 border border-green-200' : 'bg-gray-50'}`}>
+                        <div className="flex items-start gap-2">
+                          {comment.isAIAnswer ? (
+                            <Sparkles className="h-4 w-4 text-green-600 mt-1 flex-shrink-0" />
+                          ) : (
+                            <User className="h-4 w-4 text-gray-500 mt-1 flex-shrink-0" />
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs text-gray-500 mb-1">
+                              {comment.isAIAnswer ? 'AI Chef' : comment.user?.username || 'You'}
+                            </p>
+                            <p className="text-sm text-gray-700 font-medium">{comment.question}</p>
+                            {comment.answer && (
+                              <p className="text-sm text-green-700 mt-2">{comment.answer}</p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-4 text-gray-500 text-sm">
+                      <MessageSquare className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+                      <p>No questions yet. Be the first to ask!</p>
+                    </div>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <Input
+                    value={question}
+                    onChange={(e) => setQuestion(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && askAI()}
+                    placeholder="Ask about this recipe..."
+                    className="flex-1 h-10 rounded-lg"
+                    disabled={askingAI}
+                  />
+                  <Button
+                    onClick={askAI}
+                    disabled={askingAI || !question.trim()}
+                    size="sm"
+                    className="bg-green-600 hover:bg-green-700 h-10 px-3"
+                  >
+                    {askingAI ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Send className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-none shadow-xl rounded-3xl bg-white">
               <CardHeader className="p-6">
                 <CardTitle className="text-xl font-bold text-gray-800">Related Blogs</CardTitle>
               </CardHeader>

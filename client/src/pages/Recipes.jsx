@@ -8,13 +8,17 @@ export default function Recipes() {
   const [search, setSearch] = useState('')
   const [recipes, setRecipes] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     api.get('/recipes')
       .then(({ data }) => {
         setRecipes(data.recipes || [])
       })
-      .catch(console.error)
+      .catch((err) => {
+        console.error(err)
+        setError(err.response?.data?.message || 'Failed to load recipes. Please try again.')
+      })
       .finally(() => setLoading(false))
   }, [])
 
@@ -48,6 +52,12 @@ export default function Recipes() {
       {loading ? (
         <div className="flex justify-center py-20">
           <Loader2 className="h-10 w-10 animate-spin text-green-600" />
+        </div>
+      ) : error ? (
+        <div className="min-h-[40vh] flex flex-col items-center justify-center text-center p-12 bg-red-50 rounded-[3rem] border-2 border-dashed border-red-200">
+          <Utensils className="h-20 w-20 text-red-200 mb-6" />
+          <h2 className="text-3xl font-black text-red-400 uppercase italic mb-4">Something Went Wrong</h2>
+          <p className="text-red-400 font-medium max-w-sm">{error}</p>
         </div>
       ) : filtered.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
