@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
+import { getBlogUrl } from "@/lib/slug"
 import {
   MessageSquare,
   Send,
@@ -202,7 +203,7 @@ export default function ChatBot() {
                       {msg.blog.title}
                     </div>
                     <p className="text-sm mt-2">{msg.blog.summary || msg.blog.content?.substring(0, 200)}</p>
-                    <Link to={`/blog/${msg.blog.id}`}>
+                    <Link to={getBlogUrl(msg.blog)}>
                       <Button className="mt-3 w-full text-xs" size="sm">Read Blog</Button>
                     </Link>
                   </div>

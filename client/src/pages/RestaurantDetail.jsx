@@ -288,10 +288,12 @@ export default function RestaurantDetail() {
             ))}
           </div>
 
-          <div className="lg:col-span-1 space-y-6">
-            <Card className="sticky top-24 border-none shadow-xl">
-              <CardHeader className="bg-gradient-to-r from-orange-500 to-green-500 text-white rounded-t-3xl">
-                <CardTitle className="flex items-center gap-2">
+          {/* RIGHT SIDEBAR: ORDER CART & AI WAITER */}
+          <div className="lg:col-span-1 space-y-6 lg:sticky lg:top-20 self-start max-h-[calc(100vh-6rem)] overflow-y-auto pr-1 scrollbar-thin">
+            {/* CART CARD */}
+            <Card className="border-none shadow-xl rounded-3xl overflow-hidden bg-white">
+              <CardHeader className="bg-gradient-to-r from-[#ff751f] to-amber-500 text-white p-5">
+                <CardTitle className="flex items-center gap-2 text-lg font-bold">
                   <ShoppingCart className="h-5 w-5" /> Your Order
                 </CardTitle>
               </CardHeader>
@@ -299,27 +301,28 @@ export default function RestaurantDetail() {
                 {cartItems.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
                     <ShoppingCart className="h-12 w-12 mx-auto mb-2 text-gray-300" />
-                    <p>Your cart is empty</p>
+                    <p className="font-medium text-sm">Your cart is empty</p>
+                    <p className="text-xs text-gray-400 mt-1">Add items from the menu to get started</p>
                   </div>
                 ) : (
                   <>
-                    <div className="space-y-3 mb-4 max-h-60 overflow-y-auto">
+                    <div className="space-y-3 mb-4 max-h-60 overflow-y-auto pr-1">
                       {cartItems.map(({ item, qty }) => (
-                        <div key={item.id} className="flex justify-between items-center">
+                        <div key={item.id} className="flex justify-between items-center text-sm">
                           <div>
-                            <p className="font-medium text-gray-800">{item.name}</p>
-                            <p className="text-sm text-gray-500">Qty: {qty} × ${item.price.toFixed(2)}</p>
+                            <p className="font-bold text-gray-800">{item.name}</p>
+                            <p className="text-xs text-gray-500">Qty: {qty} × ${item.price.toFixed(2)}</p>
                           </div>
                           <span className="font-bold text-gray-800">${(item.price * qty).toFixed(2)}</span>
                         </div>
                       ))}
                     </div>
-                    <div className="border-t pt-4">
+                    <div className="border-t border-gray-100 pt-4">
                       <div className="flex justify-between items-center mb-4">
                         <span className="font-bold text-gray-800">Total</span>
-                        <span className="text-2xl font-bold text-orange-600">${cartTotal.toFixed(2)}</span>
+                        <span className="text-2xl font-black text-[#ff751f]">${cartTotal.toFixed(2)}</span>
                       </div>
-                      <Button onClick={handleOrder} className="w-full bg-orange-600 hover:bg-orange-700">
+                      <Button onClick={handleOrder} className="w-full bg-[#ff751f] hover:bg-orange-600 text-white font-bold rounded-2xl h-12 text-sm uppercase tracking-wider shadow-md">
                         Place Order
                       </Button>
                     </div>
@@ -328,23 +331,26 @@ export default function RestaurantDetail() {
               </CardContent>
             </Card>
 
-            <Card className="sticky top-96 border-none shadow-xl">
-              <CardHeader className="bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-t-3xl">
-                <CardTitle className="flex items-center gap-2">
-                  <Sparkles className="h-5 w-5" /> AI Waiter
+            {/* AI WAITER CARD */}
+            <Card className="border-none shadow-xl rounded-3xl overflow-hidden bg-white">
+              <CardHeader className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-5">
+                <CardTitle className="flex items-center gap-2 text-lg font-bold">
+                  <Sparkles className="h-5 w-5" /> AI Dining Waiter
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6">
-                <p className="text-sm text-gray-600 mb-4">
-                  Ask our AI waiter for recommendations or menu questions!
+                <p className="text-xs text-gray-500 mb-4 font-medium">
+                  Ask our AI waiter for dish recommendations, dietary advice, or menu questions!
                 </p>
                 {waiterResponse && (
-                  <div className="mb-4 p-3 bg-purple-50 rounded-xl border border-purple-200">
-                    <p className="text-sm text-purple-800">{waiterResponse.recipe?.recommendation || waiterResponse.recipe?.title || 'Here are some suggestions!'}</p>
+                  <div className="mb-4 p-3.5 bg-purple-50 rounded-2xl border border-purple-100">
+                    <p className="text-xs sm:text-sm text-purple-900 leading-relaxed">
+                      {waiterResponse.recipe?.recommendation || waiterResponse.recipe?.title || 'Here are some suggestions!'}
+                    </p>
                     {waiterResponse.recipe?.dishes && (
-                      <div className="mt-2 flex flex-wrap gap-2">
+                      <div className="mt-2.5 flex flex-wrap gap-1.5">
                         {waiterResponse.recipe.dishes.map((dish, idx) => (
-                          <span key={idx} className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">
+                          <span key={idx} className="text-[11px] font-bold bg-purple-100 text-purple-700 px-2.5 py-0.5 rounded-full">
                             {dish}
                           </span>
                         ))}
@@ -357,15 +363,15 @@ export default function RestaurantDetail() {
                     value={waiterQuestion}
                     onChange={(e) => setWaiterQuestion(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && askWaiter()}
-                    placeholder="What should I eat?"
-                    className="flex-1 h-10 rounded-lg"
+                    placeholder="e.g. What's the chef's best pasta?"
+                    className="flex-1 h-10 rounded-xl text-xs"
                     disabled={askingWaiter}
                   />
                   <Button
                     onClick={askWaiter}
                     disabled={askingWaiter || !waiterQuestion.trim()}
                     size="sm"
-                    className="bg-purple-600 hover:bg-purple-700 h-10 px-3"
+                    className="bg-purple-600 hover:bg-purple-700 h-10 px-3.5 rounded-xl text-white shadow-sm"
                   >
                     {askingWaiter ? (
                       <Loader2 className="h-4 w-4 animate-spin" />

@@ -3,18 +3,39 @@ const nutritionService = require('../services/nutrition.service');
 
 exports.createRecipe = async (req, res) => {
   try {
-    const { title, ingredients = [], instructions, prepTime, servings, difficulty } = req.body;
+    const { title, ingredients = [], instructions, prepTime, servings, difficulty, image } = req.body;
+
+    if (!title || !title.trim()) {
+      return res.status(400).json({ success: false, error: "Recipe title cannot be empty" });
+    }
+    if (!instructions || !instructions.trim()) {
+      return res.status(400).json({ success: false, error: "Cooking instructions cannot be empty" });
+    }
+
+    const validIngredients = Array.isArray(ingredients)
+      ? ingredients
+          .map((ing) => (typeof ing === 'object' ? ing.name : ing))
+          .filter((name) => name && name.trim())
+      : [];
+
+    if (validIngredients.length === 0) {
+      return res.status(400).json({ success: false, error: "Please add at least one valid ingredient" });
+    }
+
+    const parsedPrepTime = parseInt(prepTime, 10);
+    const parsedServings = parseInt(servings, 10);
 
     // Get nutrition information
-    const nutritionData = await nutritionService.getNutritionInfo({ ingredients });
+    const nutritionData = await nutritionService.getNutritionInfo({ ingredients: validIngredients });
 
     const recipe = await prisma.recipe.create({
       data: {
-        title,
-        instructions,
-        prepTime: parseInt(prepTime) || 0,
-        servings: parseInt(servings) || 1,
-        difficulty,
+        title: title.trim(),
+        instructions: instructions.trim(),
+        image: image?.trim() || null,
+        prepTime: isNaN(parsedPrepTime) || parsedPrepTime <= 0 ? 15 : parsedPrepTime,
+        servings: isNaN(parsedServings) || parsedServings <= 0 ? 1 : parsedServings,
+        difficulty: difficulty || 'EASY',
         creatorId: req.user.id,
         calories: nutritionData.calories,
         protein: nutritionData.protein,
@@ -34,7 +55,7 @@ exports.createRecipe = async (req, res) => {
         dietLabels: nutritionData.dietLabels,
         allergens: nutritionData.allergens,
         ingredients: {
-          create: Array.isArray(ingredients) ? ingredients.map((ing) => ({ name: typeof ing === 'object' ? ing.name : ing })) : [],
+          create: validIngredients.map((name) => ({ name: name.trim() })),
         },
       },
       include: {
@@ -53,12 +74,16 @@ exports.createRecipe = async (req, res) => {
 exports.getRecipes = async (req, res) => {
   try {
     const { search } = req.query;
-    const where = search ? {
-      OR: [
-        { title: { contains: search, mode: 'insensitive' } },
-        { instructions: { contains: search, mode: 'insensitive' } }
-      ]
-    } : {};
+    const where = {
+      title: { not: '' },
+      instructions: { not: '' },
+      ...(search ? {
+        OR: [
+          { title: { contains: search, mode: 'insensitive' } },
+          { instructions: { contains: search, mode: 'insensitive' } }
+        ]
+      } : {})
+    };
 
     const recipes = await prisma.recipe.findMany({
       where,

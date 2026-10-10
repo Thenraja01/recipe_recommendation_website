@@ -29,7 +29,6 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api/auth', require('./routes/auth.routes'));
-app.use('/api/recipes', require('./routes/recipe.routes'));
 app.use('/api/blogs', require('./routes/blog.routes'));
 app.use('/api/comments', require('./routes/blogComment.routes'));
 app.use('/api/chat', require('./routes/chat.routes'));

@@ -121,3 +121,20 @@
 .form-inputs{
   @apply grid gap-y-2;
 }
+
+@font-face {
+  font-family: 'Handelson Two';
+  src: url('/handelson-two.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+.font-anton {
+  font-family: 'Anton', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  letter-spacing: -0.01em;
+}
+
+.font-handelson {
+  font-family: 'Handelson Two', cursive, sans-serif;
+}

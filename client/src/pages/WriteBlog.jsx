@@ -51,23 +51,57 @@ export default function WriteBlog() {
     fetchBlog()
   }, [id, isEditing, navigate])
 
+  const [error, setError] = useState('')
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
+    if (error) setError('')
   }
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
+    if (e && e.preventDefault) e.preventDefault()
+    setError('')
+
+    const trimmedTitle = formData.title?.trim()
+    const trimmedContent = formData.content?.trim()
+    const trimmedIngredients = formData.ingredients?.trim()
+    const trimmedInstructions = formData.instructions?.trim()
+
+    if (!trimmedTitle) {
+      setError('Please provide a blog title. Empty blogs cannot be published.')
+      return
+    }
+    if (!trimmedContent) {
+      setError('Please write your food story or blog content. Empty blogs cannot be published.')
+      return
+    }
+    if (!trimmedIngredients) {
+      setError('Please provide the recipe ingredients for this blog.')
+      return
+    }
+    if (!trimmedInstructions) {
+      setError('Please provide the cooking instructions for this blog.')
+      return
+    }
+
     setLoading(true)
     try {
+      const payload = {
+        ...formData,
+        title: trimmedTitle,
+        content: trimmedContent,
+        ingredients: trimmedIngredients,
+        instructions: trimmedInstructions,
+      }
       if (isEditing) {
-        await api.put(`/blogs/${id}`, formData)
+        await api.put(`/blogs/${id}`, payload)
       } else {
-        await api.post('/blogs', formData)
+        await api.post('/blogs', payload)
       }
       navigate('/blogs')
-    } catch (error) {
-      console.error('Error saving blog:', error)
-      alert('Failed to save blog')
+    } catch (err) {
+      console.error('Error saving blog:', err)
+      setError(err.response?.data?.message || 'Failed to save blog. Please check all fields.')
     } finally {
       setLoading(false)
     }
@@ -171,6 +205,18 @@ export default function WriteBlog() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
+            {error && (
+              <div className="p-4 rounded-2xl bg-red-50 border-2 border-red-200 text-red-700 font-semibold text-sm flex items-center justify-between animate-in fade-in">
+                <span>{error}</span>
+                <button
+                  type="button"
+                  onClick={() => setError('')}
+                  className="text-red-500 hover:text-red-800 text-xs uppercase font-bold ml-3"
+                >
+                  Dismiss
+                </button>
+              </div>
+            )}
             <Card className="border-none shadow-xl rounded-3xl bg-white">
               <CardHeader><CardTitle>Blog Content</CardTitle></CardHeader>
               <CardContent className="space-y-4">

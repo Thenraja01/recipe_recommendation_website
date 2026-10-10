@@ -13,14 +13,27 @@ exports.createBlog = async (req, res) => {
             recipeHistory
         } = req.body;
 
+        if (!title || !title.trim()) {
+            return res.status(400).json({ message: "Blog title cannot be empty" });
+        }
+        if (!content || !content.trim()) {
+            return res.status(400).json({ message: "Blog content cannot be empty" });
+        }
+        if (!ingredients || !ingredients.trim()) {
+            return res.status(400).json({ message: "Ingredients list cannot be empty" });
+        }
+        if (!instructions || !instructions.trim()) {
+            return res.status(400).json({ message: "Cooking instructions cannot be empty" });
+        }
+
         const blog = await prisma.blog.create({
             data: {
-                title,
-                content,
-                image,
-                ingredients,
-                instructions,
-                recipeHistory,
+                title: title.trim(),
+                content: content.trim(),
+                image: image?.trim() || null,
+                ingredients: ingredients.trim(),
+                instructions: instructions.trim(),
+                recipeHistory: recipeHistory?.trim() || null,
                 authorId: req.user.id
             },
             include: {
@@ -45,37 +58,73 @@ exports.createBlog = async (req, res) => {
     }
 };
 
-// GET ALL BLOGS
+// Helper to create URL slug from title
+const slugify = (text) => {
+    if (!text) return '';
+    return text
+        .toString()
+        .toLowerCase()
+        .trim()
+        .replace(/[\s\W-]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+};
+
+// GET ALL BLOGS WITH PAGINATION & SEARCH (Filters out any empty blogs)
 exports.getBlogs = async (req, res) => {
     try {
         const { search } = req.query;
-        
-        const where = search ? {
-            OR: [
-                { title: { contains: search, mode: 'insensitive' } },
-                { content: { contains: search, mode: 'insensitive' } },
-                { ingredients: { contains: search, mode: 'insensitive' } }
-            ]
-        } : {};
+        const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+        const limit = Math.min(50, Math.max(1, parseInt(req.query.limit, 10) || 6));
+        const skip = (page - 1) * limit;
 
-        const blogs = await prisma.blog.findMany({
-            where,
-            include: {
-                author: {
-                    select: {
-                        id: true,
-                        username: true,
-                        avatar: true
+        const where = {
+            title: { not: '' },
+            content: { not: '' },
+            ...(search ? {
+                OR: [
+                    { title: { contains: search, mode: 'insensitive' } },
+                    { content: { contains: search, mode: 'insensitive' } },
+                    { ingredients: { contains: search, mode: 'insensitive' } }
+                ]
+            } : {})
+        };
+
+        const [totalBlogs, blogs] = await Promise.all([
+            prisma.blog.count({ where }),
+            prisma.blog.findMany({
+                where,
+                skip,
+                take: limit,
+                include: {
+                    author: {
+                        select: {
+                            id: true,
+                            username: true,
+                            avatar: true
+                        }
                     }
+                },
+                orderBy: {
+                    createdAt: 'desc'
                 }
-            },
-            orderBy: {
-                createdAt: 'desc'
-            }
-        });
+            })
+        ]);
+
+        const totalPages = Math.ceil(totalBlogs / limit) || 1;
 
         res.json({
-            blogs
+            blogs: blogs.map(b => ({
+                ...b,
+                slug: slugify(b.title)
+            })),
+            pagination: {
+                total: totalBlogs,
+                page,
+                limit,
+                totalPages,
+                hasNextPage: page < totalPages,
+                hasPrevPage: page > 1
+            }
         });
     } catch (err) {
         res.status(500).json({
@@ -84,23 +133,51 @@ exports.getBlogs = async (req, res) => {
     }
 };
 
-// GET SINGLE BLOG
+// GET SINGLE BLOG BY ID OR SLUG
 exports.getBlogById = async (req, res) => {
     try {
-        const blog = await prisma.blog.findUnique({
-            where: {
-                id: req.params.id
-            },
-            include: {
-                author: {
-                    select: {
-                        id: true,
-                        username: true,
-                        avatar: true
+        const identifier = decodeURIComponent(req.params.id || '').trim();
+        if (!identifier) {
+            return res.status(400).json({ message: "Invalid blog identifier" });
+        }
+
+        // 1. Try finding by ID first
+        let blog = null;
+        try {
+            blog = await prisma.blog.findUnique({
+                where: {
+                    id: identifier
+                },
+                include: {
+                    author: {
+                        select: {
+                            id: true,
+                            username: true,
+                            avatar: true
+                        }
                     }
                 }
-            }
-        });
+            });
+        } catch (_) {}
+
+        // 2. If not found by ID, search by slug / title
+        if (!blog) {
+            const allBlogs = await prisma.blog.findMany({
+                include: {
+                    author: {
+                        select: {
+                            id: true,
+                            username: true,
+                            avatar: true
+                        }
+                    }
+                }
+            });
+
+            blog = allBlogs.find(
+                b => slugify(b.title) === identifier.toLowerCase() || b.id === identifier
+            );
+        }
 
         if (!blog) {
             return res.status(404).json({
@@ -133,8 +210,14 @@ exports.getBlogById = async (req, res) => {
         });
 
         res.json({
-            blog,
-            relatedBlogs
+            blog: {
+                ...blog,
+                slug: slugify(blog.title)
+            },
+            relatedBlogs: relatedBlogs.map(r => ({
+                ...r,
+                slug: slugify(r.title)
+            }))
         });
     } catch (err) {
         res.status(500).json({

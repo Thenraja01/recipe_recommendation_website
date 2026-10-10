@@ -131,7 +131,7 @@ exports.deleteRestaurant = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Restaurant not found' });
     }
 
-    if (restaurant.ownerId !== req.user.id) {
+    if (req.user.role !== 'ADMIN' && restaurant.ownerId !== req.user.id) {
       return res.status(403).json({ success: false, message: 'Unauthorized' });
     }
 
@@ -146,7 +146,8 @@ exports.deleteRestaurant = async (req, res) => {
 
 exports.createMenuItem = async (req, res) => {
   try {
-    const { restaurantId, categoryId, name, description, image, price, isVegetarian, isVegan, isSpicy, preparationTime, calories, allergens } = req.body;
+    const restaurantId = req.params.id || req.body.restaurantId;
+    const { categoryId, name, description, image, price, isVegetarian, isVegan, isSpicy, preparationTime, calories, allergens } = req.body;
 
     const restaurant = await prisma.restaurant.findUnique({ where: { id: restaurantId } });
 
@@ -154,7 +155,7 @@ exports.createMenuItem = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Restaurant not found' });
     }
 
-    if (restaurant.ownerId !== req.user.id) {
+    if (req.user.role !== 'ADMIN' && restaurant.ownerId !== req.user.id) {
       return res.status(403).json({ success: false, message: 'Unauthorized' });
     }
 
@@ -184,7 +185,8 @@ exports.createMenuItem = async (req, res) => {
 
 exports.createMenuCategory = async (req, res) => {
   try {
-    const { restaurantId, name, description, order } = req.body;
+    const restaurantId = req.params.id || req.body.restaurantId;
+    const { name, description, order } = req.body;
 
     const restaurant = await prisma.restaurant.findUnique({ where: { id: restaurantId } });
 
@@ -192,7 +194,7 @@ exports.createMenuCategory = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Restaurant not found' });
     }
 
-    if (restaurant.ownerId !== req.user.id) {
+    if (req.user.role !== 'ADMIN' && restaurant.ownerId !== req.user.id) {
       return res.status(403).json({ success: false, message: 'Unauthorized' });
     }
 

@@ -1,61 +1,65 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { Calendar, User, Clock, ArrowLeft, BookOpen, ChefHat, History, Edit, Trash2, MessageSquare, Send, Sparkles, Loader2 } from 'lucide-react'
+import { Calendar, User, Clock, ArrowLeft, BookOpen, ChefHat, History, Edit, Trash2, Heart } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
-import { Input } from '../components/ui/input'
 import api from '../lib/api'
 import { useAuth } from '../context/AuthContext'
+
+import { getBlogUrl } from '@/lib/slug'
 
 export default function BlogDetails() {
   const { id } = useParams()
   const [blog, setBlog] = useState(null)
   const [relatedBlogs, setRelatedBlogs] = useState([])
-  const [comments, setComments] = useState([])
+  const [isFavorited, setIsFavorited] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [question, setQuestion] = useState('')
-  const [askingAI, setAskingAI] = useState(false)
   const { user } = useAuth()
 
   useEffect(() => {
     fetchBlog()
-    fetchComments()
   }, [id])
+
+  // Check if blog is favorited by user
+  useEffect(() => {
+    if (!user || !blog?.id) return
+    api.get('/favorites')
+      .then(({ data }) => {
+        const ids = (data.blogs || []).map(b => b.id || b.blogId)
+        if (ids.includes(blog.id)) setIsFavorited(true)
+      })
+      .catch(() => {})
+  }, [user, blog?.id])
+
+  const toggleFavorite = async () => {
+    if (!user) {
+      window.location.href = '/auth'
+      return
+    }
+    if (!blog?.id) return
+    try {
+      if (isFavorited) {
+        await api.delete(`/favorites/blog/${blog.id}`)
+        setIsFavorited(false)
+      } else {
+        await api.post('/favorites/blog', { blogId: blog.id })
+        setIsFavorited(true)
+      }
+    } catch (err) {
+      console.error('Failed to toggle blog favorite:', err)
+    }
+  }
 
   const fetchBlog = async () => {
     try {
       setLoading(true)
-      const { data } = await api.get(`/blogs/${id}`)
+      const { data } = await api.get(`/blogs/${encodeURIComponent(id)}`)
       setBlog(data.blog)
       setRelatedBlogs(data.relatedBlogs || [])
     } catch (error) {
       console.error('Error fetching blog:', error)
     } finally {
       setLoading(false)
-    }
-  }
-
-  const fetchComments = async () => {
-    try {
-      const { data } = await api.get(`/comments/blog/${id}`)
-      setComments(data.comments || [])
-    } catch (error) {
-      console.error('Error fetching comments:', error)
-    }
-  }
-
-  const askAI = async () => {
-    if (!question.trim()) return
-    setAskingAI(true)
-    try {
-      const { data } = await api.post('/comments/ask-ai', { blogId: id, question })
-      setComments([data.comment, ...comments])
-      setQuestion('')
-    } catch (error) {
-      console.error('Error asking AI:', error)
-      alert('Failed to get AI response')
-    } finally {
-      setAskingAI(false)
     }
   }
 
@@ -136,18 +140,34 @@ export default function BlogDetails() {
                       </div>
                     </div>
                   </div>
-                  {isAuthor && (
-                    <div className="flex gap-2">
-                      <Link to={`/blogs/edit/${blog.id}`}>
-                        <Button size="sm" variant="outline" className="border-green-600 text-green-600 hover:bg-green-50">
-                          <Edit className="h-4 w-4 mr-1" /> Edit
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={toggleFavorite}
+                      className={`rounded-full px-4 h-9 font-bold transition-all ${
+                        isFavorited
+                          ? 'border-red-200 bg-red-50 text-red-600 shadow-sm'
+                          : 'border-gray-200 text-gray-700 hover:border-red-200 hover:text-red-600'
+                      }`}
+                    >
+                      <Heart className={`h-4 w-4 mr-1.5 ${isFavorited ? 'fill-red-500 text-red-500' : ''}`} />
+                      {isFavorited ? 'Favorited' : 'Save Story'}
+                    </Button>
+
+                    {isAuthor && (
+                      <>
+                        <Link to={`/blogs/edit/${blog.id}`}>
+                          <Button size="sm" variant="outline" className="border-green-600 text-green-600 hover:bg-green-50">
+                            <Edit className="h-4 w-4 mr-1" /> Edit
+                          </Button>
+                        </Link>
+                        <Button size="sm" variant="outline" className="border-red-600 text-red-600 hover:bg-red-50" onClick={handleDelete}>
+                          <Trash2 className="h-4 w-4 mr-1" /> Delete
                         </Button>
-                      </Link>
-                      <Button size="sm" variant="outline" className="border-red-600 text-red-600 hover:bg-red-50" onClick={handleDelete}>
-                        <Trash2 className="h-4 w-4 mr-1" /> Delete
-                      </Button>
-                    </div>
-                  )}
+                      </>
+                    )}
+                  </div>
                 </div>
                 <CardTitle className="text-4xl font-bold text-gray-800 mb-4">{blog.title}</CardTitle>
               </CardHeader>
@@ -194,70 +214,6 @@ export default function BlogDetails() {
 
           <div className="lg:col-span-1 space-y-6">
             <Card className="border-none shadow-xl rounded-3xl bg-white sticky top-24">
-              <CardHeader className="p-6 bg-gradient-to-r from-green-500 to-emerald-600 rounded-t-3xl">
-                <CardTitle className="text-xl font-bold text-white flex items-center gap-2">
-                  <Sparkles className="h-5 w-5" /> AI Chef Assistant
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-6">
-                <p className="text-sm text-gray-600 mb-4">
-                  Ask questions about this recipe, ingredients, or cooking techniques!
-                </p>
-                <div className="space-y-3 mb-4 max-h-60 overflow-y-auto">
-                  {comments.length > 0 ? (
-                    comments.map((comment) => (
-                      <div key={comment.id} className={`p-3 rounded-xl ${comment.isAIAnswer ? 'bg-green-50 border border-green-200' : 'bg-gray-50'}`}>
-                        <div className="flex items-start gap-2">
-                          {comment.isAIAnswer ? (
-                            <Sparkles className="h-4 w-4 text-green-600 mt-1 flex-shrink-0" />
-                          ) : (
-                            <User className="h-4 w-4 text-gray-500 mt-1 flex-shrink-0" />
-                          )}
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs text-gray-500 mb-1">
-                              {comment.isAIAnswer ? 'AI Chef' : comment.user?.username || 'You'}
-                            </p>
-                            <p className="text-sm text-gray-700 font-medium">{comment.question}</p>
-                            {comment.answer && (
-                              <p className="text-sm text-green-700 mt-2">{comment.answer}</p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-center py-4 text-gray-500 text-sm">
-                      <MessageSquare className="h-8 w-8 mx-auto mb-2 text-gray-300" />
-                      <p>No questions yet. Be the first to ask!</p>
-                    </div>
-                  )}
-                </div>
-                <div className="flex gap-2">
-                  <Input
-                    value={question}
-                    onChange={(e) => setQuestion(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && askAI()}
-                    placeholder="Ask about this recipe..."
-                    className="flex-1 h-10 rounded-lg"
-                    disabled={askingAI}
-                  />
-                  <Button
-                    onClick={askAI}
-                    disabled={askingAI || !question.trim()}
-                    size="sm"
-                    className="bg-green-600 hover:bg-green-700 h-10 px-3"
-                  >
-                    {askingAI ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Send className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-none shadow-xl rounded-3xl bg-white">
               <CardHeader className="p-6">
                 <CardTitle className="text-xl font-bold text-gray-800">Related Blogs</CardTitle>
               </CardHeader>
@@ -265,7 +221,7 @@ export default function BlogDetails() {
                 {relatedBlogs.length > 0 ? (
                   <div className="space-y-4">
                     {relatedBlogs.map((relatedBlog) => (
-                      <Link key={relatedBlog.id} to={`/blog/${relatedBlog.id}`}>
+                      <Link key={relatedBlog.id} to={getBlogUrl(relatedBlog)}>
                         <div className="p-4 rounded-xl hover:bg-green-50 transition-colors cursor-pointer border border-gray-100 hover:border-green-200">
                           {relatedBlog.image && (
                             <img src={relatedBlog.image} alt={relatedBlog.title} className="w-full h-32 object-cover rounded-lg mb-3" />

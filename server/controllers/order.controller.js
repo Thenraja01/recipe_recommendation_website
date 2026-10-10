@@ -111,7 +111,7 @@ exports.getRestaurantOrders = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Restaurant not found' });
     }
 
-    if (restaurant.ownerId !== req.user.id) {
+    if (req.user.role !== 'ADMIN' && restaurant.ownerId !== req.user.id) {
       return res.status(403).json({ success: false, message: 'Unauthorized' });
     }
 
@@ -155,7 +155,7 @@ exports.updateOrderStatus = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Order not found' });
     }
 
-    if (order.restaurant.ownerId !== req.user.id) {
+    if (req.user.role !== 'ADMIN' && order.restaurant.ownerId !== req.user.id) {
       return res.status(403).json({ success: false, message: 'Unauthorized' });
     }
 

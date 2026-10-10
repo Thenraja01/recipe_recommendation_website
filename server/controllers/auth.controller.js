@@ -221,7 +221,8 @@ exports.getMe = async (req, res) => {
         preferences: user.preferences ? {
           dietary: user.preferences.dietary,
           maxDeliveryMinutes: user.preferences.maxDeliveryMinutes,
-          preferredCuisines: user.preferences.cuisines.map(item => item.cuisine)
+          preferredCuisines: user.preferences.cuisines?.map(item => item.cuisine) || [],
+          allergens: user.preferences.allergens || []
         } : null
       }
     });
@@ -303,6 +304,42 @@ exports.updatePreferences = async (req, res) => {
       message: 'Preferences updated successfully',
       preference
     });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.user.id;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: 'Current password and new password are required' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ message: 'New password must be at least 6 characters' });
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Incorrect current password' });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedPassword }
+    });
+
+    res.json({ success: true, message: 'Password updated successfully' });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
